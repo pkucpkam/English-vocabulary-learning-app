@@ -1,126 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:learn_new_words/screens/learned_words_page.dart';
+import 'package:learn_new_words/screens/review.dart';
+import '../services/data_service.dart';
+import 'package:intl/intl.dart';
 
-class DailyVocabularyProgressPage extends StatelessWidget {
-  final int totalDays = 100;
-  final int currentDay = 6;
-  final List<int> completedDays = [1, 2, 3, 4, 5];
+class DailyVocabularyProgressPage extends StatefulWidget {
+  const DailyVocabularyProgressPage({super.key});
 
-  DailyVocabularyProgressPage({super.key});
+  @override
+  State<DailyVocabularyProgressPage> createState() =>
+      _DailyVocabularyProgressPageState();
+}
 
-  bool _isUnlocked(int day) {
-    if (day == 1) return true;
-    return completedDays.contains(day - 1);
+class _DailyVocabularyProgressPageState
+    extends State<DailyVocabularyProgressPage> {
+  List<DateTime> learnedDays = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLearnedDays();
   }
 
-  void _showLockedDialog(BuildContext context, int day) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.lock_outline,
-                    size: 64,
-                    color: Colors.orangeAccent,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Ngày $day chưa được mở khóa!',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Bạn cần hoàn thành ngày trước đó để tiếp tục học.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orangeAccent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 12,
-                      ),
-                      child: Text('OK', style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ],
+  Future<void> _loadLearnedDays() async {
+    setState(() {
+      isLoading = true;
+    });
+    final vocabList = await DataService.getLearnedVocabularies();
+    final days =
+        vocabList
+            .where((vocab) => vocab.learnedDate != null)
+            .map(
+              (vocab) => DateTime(
+                vocab.learnedDate!.year,
+                vocab.learnedDate!.month,
+                vocab.learnedDate!.day,
               ),
-            ),
-          ),
+            )
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a)); // Sắp xếp từ mới nhất đến cũ nhất
+    setState(() {
+      learnedDays = days;
+      isLoading = false;
+    });
+  }
+
+  void _showDayDetails(BuildContext context, DateTime day) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LearnedWordsPage(selectedDay: day),
+      ),
     );
   }
 
-  void _goToDay(BuildContext context, int day) {
-    ScaffoldMessenger.of(
+  void _goToReview(BuildContext context, DateTime day) {
+    Navigator.push(
       context,
-    ).showSnackBar(SnackBar(content: Text('Đi tới Ngày $day')));
-    // TODO: Navigate to learning page for day $day
+      MaterialPageRoute(builder: (context) => ReviewPage(selectedDay: day)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Study progress'), centerTitle: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (learnedDays.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Study progress'), centerTitle: true),
+        body: const Center(child: Text('Haven\'t studied a day yet')),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Learning Progress'), centerTitle: true),
+      appBar: AppBar(title: const Text('Study progress'), centerTitle: true),
       body: ListView.builder(
-        itemCount: totalDays,
+        itemCount: learnedDays.length,
         itemBuilder: (context, index) {
-          final day = index + 1;
-          final isCompleted = completedDays.contains(day);
-          final isToday = day == currentDay;
-          final isUnlocked = _isUnlocked(day);
-
-          Color tileColor;
-          Widget? trailingIcon;
-
-          if (isCompleted) {
-            tileColor = Colors.green;
-            trailingIcon = const Icon(Icons.check, color: Colors.white);
-          } else if (isToday) {
-            tileColor = Colors.amber;
-          } else {
-            tileColor =
-                isUnlocked ? Colors.grey.shade300 : Colors.grey.shade200;
-            if (!isUnlocked) {
-              trailingIcon = const Icon(Icons.lock, color: Colors.grey);
-            }
-          }
-
+          final day = learnedDays[index];
+          final formattedDate = DateFormat('dd/MM/yyyy').format(day);
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             decoration: BoxDecoration(
-              color: tileColor,
+              color: Colors.green.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              title: Text('Day $day'),
-              trailing: trailingIcon,
-              onTap: () {
-                if (isUnlocked) {
-                  _goToDay(context, day);
-                } else {
-                  _showLockedDialog(context, day);
-                }
-              },
+              title: Text('Day $formattedDate'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.list, color: Colors.blue),
+                    onPressed: () => _showDayDetails(context, day),
+                    tooltip: 'Show details',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.orange),
+                    onPressed: () => _goToReview(context, day),
+                    tooltip: 'Review words',
+                  ),
+                ],
+              ),
             ),
           );
         },

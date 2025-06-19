@@ -18,9 +18,6 @@ class DataService {
           jsonList.map((jsonItem) => Vocabulary.fromJson(jsonItem)).toList();
 
       await box.addAll(vocabList);
-      print("Vocabulary loaded into Hive.");
-    } else {
-      print("Vocabulary already initialized.");
     }
   }
 
@@ -28,5 +25,28 @@ class DataService {
   static Future<List<Vocabulary>> getAllVocabularies() async {
     final box = await Hive.openBox<Vocabulary>(boxName);
     return box.values.toList();
+  }
+
+  /// Cập nhật trạng thái học của một từ
+  static Future<void> updateVocabularyLearnedStatus(
+    Vocabulary vocab,
+    bool isLearned, {
+    DateTime? learnedDate,
+  }) async {
+    vocab.isLearned = isLearned;
+    vocab.learnedDate = isLearned ? (learnedDate ?? DateTime.now()) : null;
+    await vocab.save(); // Lưu thay đổi vào Hive
+  }
+
+  /// Lấy danh sách từ đã học
+  static Future<List<Vocabulary>> getLearnedVocabularies() async {
+    final box = await Hive.openBox<Vocabulary>(boxName);
+    return box.values.where((vocab) => vocab.isLearned).toList();
+  }
+
+  /// Lấy danh sách từ chưa học
+  static Future<List<Vocabulary>> getUnlearnedVocabularies() async {
+    final box = await Hive.openBox<Vocabulary>(boxName);
+    return box.values.where((vocab) => !vocab.isLearned).toList();
   }
 }

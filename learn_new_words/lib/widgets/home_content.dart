@@ -12,18 +12,6 @@ class MyHomeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bars
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search vocabulary...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey[100],
-            ),
-          ),
           const SizedBox(height: 24),
           const Text(
             'Progress Overview',

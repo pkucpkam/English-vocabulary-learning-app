@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/vocab.dart';
+import '../services/data_service.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -8,32 +10,67 @@ class LearnPage extends StatefulWidget {
 }
 
 class _LearnPageState extends State<LearnPage> {
-  final List<Map<String, String>> vocabulary = [
-    {'word': 'Apple', 'meaning': 'Quả táo'},
-    {'word': 'Book', 'meaning': 'Cuốn sách'},
-    {'word': 'Cat', 'meaning': 'Con mèo'},
-    {
-      'word': 'Responsibility',
-      'meaning': 'Trách nhiệm, nghĩa vụ hoặc sự chịu trách nhiệm về điều gì đó',
-    },
-  ];
-
+  List<Vocabulary> unlearnedVocabularies = [];
   int currentIndex = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnlearnedVocabularies();
+  }
+
+  Future<void> _loadUnlearnedVocabularies() async {
+    setState(() {
+      isLoading = true;
+    });
+    final vocabList = await DataService.getUnlearnedVocabularies();
+    setState(() {
+      unlearnedVocabularies = vocabList;
+      isLoading = false;
+    });
+  }
 
   void _markAsKnown() {
+    if (unlearnedVocabularies.isEmpty) return;
+
     setState(() {
-      if (currentIndex < vocabulary.length - 1) {
-        currentIndex++;
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Đã học hết từ!')));
-      }
+      final vocab = unlearnedVocabularies[currentIndex];
+      DataService.updateVocabularyLearnedStatus(vocab, true).then((_) {
+        if (currentIndex < unlearnedVocabularies.length - 1) {
+          currentIndex++;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã học hết từ chưa học!')),
+          );
+          _loadUnlearnedVocabularies(); // Tải lại danh sách từ chưa học
+        }
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (unlearnedVocabularies.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        ),
+        body: const Center(child: Text('Không còn từ nào để học!')),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -41,8 +78,8 @@ class _LearnPageState extends State<LearnPage> {
       ),
       body: Center(
         child: LearnWordWidget(
-          word: vocabulary[currentIndex]['word']!,
-          meaning: vocabulary[currentIndex]['meaning']!,
+          word: unlearnedVocabularies[currentIndex].word,
+          meaning: unlearnedVocabularies[currentIndex].meanings.join('; '),
           onKnownPressed: _markAsKnown,
         ),
       ),
@@ -122,7 +159,7 @@ class LearnWordWidget extends StatelessWidget {
               ),
             ),
             child: const Text(
-              'Next',
+              'Already Know',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),

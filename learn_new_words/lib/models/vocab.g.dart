@@ -19,17 +19,23 @@ class VocabularyAdapter extends TypeAdapter<Vocabulary> {
     return Vocabulary(
       word: fields[0] as String,
       meanings: (fields[1] as List).cast<String>(),
+      isLearned: fields[2] as bool,
+      learnedDate: fields[3] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Vocabulary obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.word)
       ..writeByte(1)
-      ..write(obj.meanings);
+      ..write(obj.meanings)
+      ..writeByte(2)
+      ..write(obj.isLearned)
+      ..writeByte(3)
+      ..write(obj.learnedDate);
   }
 
   @override
