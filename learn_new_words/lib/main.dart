@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:learn_new_words/models/vocab.dart';
 import 'package:learn_new_words/screens/vocab_list_page.dart';
 import 'package:learn_new_words/services/data_service.dart';
 import 'package:learn_new_words/widgets/home_content.dart';
 
-// Import các trang
-
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(VocabularyAdapter());
-
-  await DataService.initVocabularyFromJsonIfNeeded();
-  runApp(const MyApp());
+  try {
+    await Hive.initFlutter();
+    // Đăng ký cả VocabularyAdapter và MeaningAdapter
+    Hive.registerAdapter(VocabularyAdapter());
+    Hive.registerAdapter(MeaningAdapter());
+    // Xóa hộp Hive cũ để tránh lỗi dữ liệu không tương thích
+    await Hive.deleteBoxFromDisk('vocabularyBox');
+    await DataService.initVocabularyFromJsonIfNeeded();
+    runApp(const MyApp());
+  } catch (e, stackTrace) {
+    // Hiển thị lỗi nếu khởi tạo thất bại
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Lỗi khởi tạo: $e\n$stackTrace')),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -45,7 +57,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = [
     const MyHomeContent(),
-    VocabListPage(),
+    const VocabListPage(),
     const Center(child: Text("Settings Page", style: TextStyle(fontSize: 24))),
   ];
 

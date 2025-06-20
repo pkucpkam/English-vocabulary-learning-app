@@ -18,16 +18,17 @@ class VocabularyAdapter extends TypeAdapter<Vocabulary> {
     };
     return Vocabulary(
       word: fields[0] as String,
-      meanings: (fields[1] as List).cast<String>(),
+      meanings: (fields[1] as List).cast<Meaning>(),
       isLearned: fields[2] as bool,
       learnedDate: fields[3] as DateTime?,
+      pronunciation_uk: fields[4] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Vocabulary obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.word)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class VocabularyAdapter extends TypeAdapter<Vocabulary> {
       ..writeByte(2)
       ..write(obj.isLearned)
       ..writeByte(3)
-      ..write(obj.learnedDate);
+      ..write(obj.learnedDate)
+      ..writeByte(4)
+      ..write(obj.pronunciation_uk);
   }
 
   @override
@@ -45,6 +48,43 @@ class VocabularyAdapter extends TypeAdapter<Vocabulary> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is VocabularyAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class MeaningAdapter extends TypeAdapter<Meaning> {
+  @override
+  final int typeId = 1;
+
+  @override
+  Meaning read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Meaning(
+      meaning: fields[0] as String,
+      example: fields[1] as String,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Meaning obj) {
+    writer
+      ..writeByte(2)
+      ..writeByte(0)
+      ..write(obj.meaning)
+      ..writeByte(1)
+      ..write(obj.example);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MeaningAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

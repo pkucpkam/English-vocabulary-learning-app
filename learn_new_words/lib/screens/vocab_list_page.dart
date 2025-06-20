@@ -44,8 +44,15 @@ class _VocabListPageState extends State<VocabListPage> {
     if (_searchQuery.isEmpty) return vocabList;
     return vocabList.where((vocab) {
       final word = vocab.word.toLowerCase();
-      final meanings = vocab.meanings.join(' ').toLowerCase();
-      return word.contains(_searchQuery) || meanings.contains(_searchQuery);
+      final meanings =
+          vocab.meanings.map((m) => m.meaning).join(' ').toLowerCase();
+      final examples =
+          vocab.meanings.map((m) => m.example).join(' ').toLowerCase();
+      final pronunciation = vocab.pronunciation_uk?.toLowerCase() ?? '';
+      return word.contains(_searchQuery) ||
+          meanings.contains(_searchQuery) ||
+          examples.contains(_searchQuery) ||
+          pronunciation.contains(_searchQuery);
     }).toList();
   }
 
@@ -116,26 +123,27 @@ class _VocabListPageState extends State<VocabListPage> {
                   itemCount: filteredVocabList.length,
                   itemBuilder: (context, index) {
                     final vocab = filteredVocabList[index];
-                    final word = vocab.word;
-                    final meaning = vocab.meanings.join(', ');
+                    final meaning = vocab.meanings
+                        .map((m) => m.meaning)
+                        .join(', ');
 
                     return ListTile(
                       title: Text(
-                        word,
+                        vocab.word,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text(meaning),
+                      subtitle: Text(
+                        meaning,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       leading: const Icon(Icons.bookmark_border),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (_) => VocabDetailPage(
-                                  word: word,
-                                  meaning: meaning,
-                                ),
+                            builder: (_) => VocabDetailPage(vocabulary: vocab),
                           ),
                         );
                       },

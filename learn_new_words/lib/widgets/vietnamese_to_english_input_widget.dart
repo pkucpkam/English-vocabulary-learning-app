@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import '../models/vocab.dart';
 
 class VietnameseToEnglishInputWidget extends StatefulWidget {
-  final String meaning;
-  final String correctWord;
-  final VoidCallback onNext;
+  final Vocabulary vocabulary;
+  final Meaning correctMeaning;
+  final Function({bool isCorrect}) onNext;
 
   const VietnameseToEnglishInputWidget({
     super.key,
-    required this.meaning,
-    required this.correctWord,
+    required this.vocabulary,
+    required this.correctMeaning,
     required this.onNext,
   });
 
@@ -26,7 +27,7 @@ class _VietnameseToEnglishInputWidgetState
     setState(() {
       isCorrect =
           _controller.text.trim().toLowerCase() ==
-          widget.correctWord.toLowerCase();
+          widget.vocabulary.word.toLowerCase();
     });
   }
 
@@ -38,65 +39,93 @@ class _VietnameseToEnglishInputWidgetState
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardSize = screenWidth * 0.85;
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
+        Container(
+          width: cardSize,
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 164.0,
-              vertical: 128.0,
-            ),
-            child: Text(
-              widget.meaning,
-              style: const TextStyle(fontSize: 32),
-              textAlign: TextAlign.center,
-            ),
+          child: Column(
+            children: [
+              Text(
+                widget.correctMeaning.meaning,
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (widget.vocabulary.pronunciation_uk != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    '/${widget.vocabulary.pronunciation_uk}/',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[700],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 24),
         TextField(
           controller: _controller,
           decoration: InputDecoration(
-            hintText: 'Enter the English word',
+            hintText: 'Nhập từ tiếng Anh',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor: Colors.grey[100],
+            errorText: isCorrect == false ? 'Sai! Thử lại.' : null,
           ),
+          textAlign: TextAlign.center,
+          onSubmitted: (_) => _checkAnswer(),
         ),
         const SizedBox(height: 24),
         ElevatedButton(
-          onPressed: isCorrect == null ? _checkAnswer : null,
+          onPressed: _checkAnswer,
           style: ElevatedButton.styleFrom(
             backgroundColor:
                 isCorrect == null
-                    ? Colors.blue
-                    : (isCorrect! ? Colors.green : Colors.red),
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.green,
             foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text('Check', style: TextStyle(fontSize: 16)),
+          child: const Text('Kiểm tra', style: TextStyle(fontSize: 16)),
         ),
-        const SizedBox(height: 16),
         if (isCorrect != null)
-          ElevatedButton(
-            onPressed: widget.onNext,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: ElevatedButton(
+              onPressed: () => widget.onNext(isCorrect: isCorrect ?? false),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              child: const Text('Tiếp theo', style: TextStyle(fontSize: 16)),
             ),
-            child: const Text('Tiếp theo', style: TextStyle(fontSize: 16)),
           ),
       ],
     );

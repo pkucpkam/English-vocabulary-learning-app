@@ -22,6 +22,7 @@ class _ReviewPageState extends State<ReviewPage> {
   int currentIndex = 0;
   int reviewType =
       0; // 0: Eng->Viet, 1: Viet->Eng, 2: Viet->Eng Input, 3: Matching
+  int correctAnswers = 0;
   bool isLoading = true;
   final Random random = Random();
 
@@ -49,26 +50,32 @@ class _ReviewPageState extends State<ReviewPage> {
     setState(() {
       dayVocabularies = dayVocabs;
       isLoading = false;
-      _randomizeReviewType();
+      if (dayVocabularies.isNotEmpty) _randomizeReviewType();
     });
   }
 
   void _randomizeReviewType() {
     setState(() {
-      reviewType = random.nextInt(4); // Random từ 0 đến 3
+      reviewType = random.nextInt(4);
     });
   }
 
-  void _nextQuestion() {
+  void _nextQuestion({bool isCorrect = false}) {
     setState(() {
+      if (isCorrect) correctAnswers++;
       if (currentIndex < dayVocabularies.length - 1) {
         currentIndex++;
         _randomizeReviewType();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã ôn tập hết từ của ngày này!')),
+          SnackBar(
+            content: Text(
+              'Hoàn thành ôn tập! Đúng: $correctAnswers/${dayVocabularies.length}',
+            ),
+          ),
         );
         currentIndex = 0;
+        correctAnswers = 0;
         _randomizeReviewType();
       }
     });
@@ -104,54 +111,42 @@ class _ReviewPageState extends State<ReviewPage> {
       );
     }
 
-    Widget reviewWidget;
-    // Chuyển Vocabulary thành Map để tương thích với widget con
-    final vocabMap =
-        dayVocabularies
-            .map(
-              (vocab) => {
-                'word': vocab.word,
-                'meaning': vocab.meanings.isNotEmpty ? vocab.meanings[0] : '',
-              },
-            )
-            .toList();
+    final currentVocab = dayVocabularies[currentIndex];
+    final selectedMeaning =
+        currentVocab.meanings.isNotEmpty
+            ? currentVocab.meanings[random.nextInt(
+              currentVocab.meanings.length,
+            )]
+            : Meaning(meaning: '', example: '');
 
+    Widget reviewWidget;
     switch (reviewType) {
       case 0:
         reviewWidget = EnglishToVietnameseWidget(
-          word: dayVocabularies[currentIndex].word,
-          correctMeaning:
-              dayVocabularies[currentIndex].meanings.isNotEmpty
-                  ? dayVocabularies[currentIndex].meanings[0]
-                  : '',
-          vocabulary: vocabMap,
+          vocabulary: currentVocab,
+          correctMeaning: selectedMeaning,
+          vocabularies: dayVocabularies,
           onNext: _nextQuestion,
         );
         break;
       case 1:
         reviewWidget = VietnameseToEnglishWidget(
-          meaning:
-              dayVocabularies[currentIndex].meanings.isNotEmpty
-                  ? dayVocabularies[currentIndex].meanings[0]
-                  : '',
-          correctWord: dayVocabularies[currentIndex].word,
-          vocabulary: vocabMap,
+          vocabulary: currentVocab,
+          correctMeaning: selectedMeaning,
+          vocabularies: dayVocabularies,
           onNext: _nextQuestion,
         );
         break;
       case 2:
         reviewWidget = VietnameseToEnglishInputWidget(
-          meaning:
-              dayVocabularies[currentIndex].meanings.isNotEmpty
-                  ? dayVocabularies[currentIndex].meanings[0]
-                  : '',
-          correctWord: dayVocabularies[currentIndex].word,
+          vocabulary: currentVocab,
+          correctMeaning: selectedMeaning,
           onNext: _nextQuestion,
         );
         break;
       case 3:
         reviewWidget = MatchingWidget(
-          vocabulary: vocabMap,
+          vocabularies: dayVocabularies,
           onComplete: _nextQuestion,
         );
         break;
@@ -167,6 +162,20 @@ class _ReviewPageState extends State<ReviewPage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                '${currentIndex + 1}/${dayVocabularies.length}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(

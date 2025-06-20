@@ -1,14 +1,14 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'dart:math';
+import '../models/vocab.dart';
 
 class MatchingWidget extends StatefulWidget {
-  final List<Map<String, String>> vocabulary;
-  final VoidCallback onComplete;
+  final List<Vocabulary> vocabularies;
+  final Function({bool isCorrect}) onComplete;
 
   const MatchingWidget({
     super.key,
-    required this.vocabulary,
+    required this.vocabularies,
     required this.onComplete,
   });
 
@@ -17,8 +17,7 @@ class MatchingWidget extends StatefulWidget {
 }
 
 class _MatchingWidgetState extends State<MatchingWidget> {
-  List<String> words = [];
-  List<String> meanings = [];
+  List<Map<String, dynamic>> pairs = [];
   String? selectedWord;
   String? selectedMeaning;
   List<Map<String, String>> matchedPairs = [];
@@ -30,8 +29,19 @@ class _MatchingWidgetState extends State<MatchingWidget> {
   }
 
   void _resetGame() {
-    words = widget.vocabulary.map((e) => e['word']!).toList()..shuffle();
-    meanings = widget.vocabulary.map((e) => e['meaning']!).toList()..shuffle();
+    final random = Random();
+    pairs =
+        widget.vocabularies
+            .where((v) => v.meanings.isNotEmpty)
+            .map(
+              (v) => {
+                'word': v.word,
+                'meaning':
+                    v.meanings[random.nextInt(v.meanings.length)].meaning,
+              },
+            )
+            .toList()
+          ..shuffle();
     matchedPairs.clear();
     selectedWord = null;
     selectedMeaning = null;
@@ -53,7 +63,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
 
   void _checkMatch() {
     if (selectedWord != null && selectedMeaning != null) {
-      final pair = widget.vocabulary.firstWhere(
+      final pair = pairs.firstWhere(
         (element) =>
             element['word'] == selectedWord &&
             element['meaning'] == selectedMeaning,
@@ -61,14 +71,24 @@ class _MatchingWidgetState extends State<MatchingWidget> {
       );
       if (pair.isNotEmpty) {
         matchedPairs.add({'word': selectedWord!, 'meaning': selectedMeaning!});
-        words.remove(selectedWord);
-        meanings.remove(selectedMeaning);
-        if (matchedPairs.length == widget.vocabulary.length) {
+        pairs.removeWhere(
+          (element) =>
+              element['word'] == selectedWord ||
+              element['meaning'] == selectedMeaning,
+        );
+        if (pairs.isEmpty) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Hoàn thành!')));
-          Future.delayed(const Duration(seconds: 1), widget.onComplete);
+          Future.delayed(
+            const Duration(seconds: 1),
+            () => widget.onComplete(isCorrect: true),
+          );
         }
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Sai! Thử lại.')));
       }
       selectedWord = null;
       selectedMeaning = null;
@@ -77,122 +97,87 @@ class _MatchingWidgetState extends State<MatchingWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Tính số lượng lớn nhất giữa words và meanings
-    final int maxLength = max(words.length, meanings.length);
-
-    // Bổ sung các ô trống nếu cần để cân bằng 2 cột
-    final List<String?> paddedWords = List<String?>.from(words)
-      ..addAll(List.filled(maxLength - words.length, null));
-    final List<String?> paddedMeanings = List<String?>.from(meanings)
-      ..addAll(List.filled(maxLength - meanings.length, null));
-
-    return Row(
+    return Column(
       children: [
-        // CỘT TỪ VỰNG
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(maxLength, (index) {
-              final word = paddedWords[index];
-              final isMatched = matchedPairs.any(
-                (pair) => pair['word'] == word,
-              );
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 6.0,
-                  horizontal: 8.0,
-                ),
-                child: SizedBox(
-                  height: 100,
-                  child:
-                      word == null
-                          ? const SizedBox.shrink()
-                          : GestureDetector(
-                            onTap: isMatched ? null : () => _selectWord(word),
-                            child: Card(
-                              elevation: 4,
-                              color:
-                                  selectedWord == word
-                                      ? Colors.blue[100]
-                                      : Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Text(
-                                    word,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                ),
-              );
-            }),
-          ),
+        const Text(
+          'Ghép từ với nghĩa',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-
-        // CỘT NGHĨA
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(maxLength, (index) {
-              final meaning = paddedMeanings[index];
-              final isMatched = matchedPairs.any(
-                (pair) => pair['meaning'] == meaning,
-              );
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 6.0,
-                  horizontal: 8.0,
-                ),
-                child: SizedBox(
-                  height: 100,
-                  child:
-                      meaning == null
-                          ? const SizedBox.shrink()
-                          : GestureDetector(
-                            onTap:
-                                isMatched
-                                    ? null
-                                    : () => _selectMeaning(meaning),
-                            child: Card(
-                              elevation: 4,
-                              color:
-                                  selectedMeaning == meaning
-                                      ? Colors.blue[100]
-                                      : Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Text(
-                                    meaning,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          alignment: WrapAlignment.center,
+          children: [
+            ...pairs.map((pair) {
+              final word = pair['word'] as String;
+              final isMatched = matchedPairs.any((p) => p['word'] == word);
+              return SizedBox(
+                width: 150,
+                height: 80,
+                child: GestureDetector(
+                  onTap: isMatched ? null : () => _selectWord(word),
+                  child: Card(
+                    elevation: 4,
+                    color:
+                        selectedWord == word ? Colors.blue[100] : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          word,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               );
             }),
-          ),
+            ...pairs.map((pair) {
+              final meaning = pair['meaning'] as String;
+              final isMatched = matchedPairs.any(
+                (p) => p['meaning'] == meaning,
+              );
+              return SizedBox(
+                width: 150,
+                height: 80,
+                child: GestureDetector(
+                  onTap: isMatched ? null : () => _selectMeaning(meaning),
+                  child: Card(
+                    elevation: 4,
+                    color:
+                        selectedMeaning == meaning
+                            ? Colors.blue[100]
+                            : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          meaning,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
         ),
       ],
     );

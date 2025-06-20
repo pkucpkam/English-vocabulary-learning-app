@@ -34,18 +34,35 @@ class _LearnPageState extends State<LearnPage> {
   void _markAsKnown() {
     if (unlearnedVocabularies.isEmpty) return;
 
-    setState(() {
-      final vocab = unlearnedVocabularies[currentIndex];
-      DataService.updateVocabularyLearnedStatus(vocab, true).then((_) {
+    final vocab = unlearnedVocabularies[currentIndex];
+    DataService.updateVocabularyLearnedStatus(
+      vocab,
+      true,
+      learnedDate: DateTime.now(),
+    ).then((_) {
+      setState(() {
         if (currentIndex < unlearnedVocabularies.length - 1) {
           currentIndex++;
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Đã học hết từ chưa học!')),
           );
-          _loadUnlearnedVocabularies(); // Tải lại danh sách từ chưa học
+          _loadUnlearnedVocabularies();
         }
       });
+    });
+  }
+
+  void _skipWord() {
+    setState(() {
+      if (currentIndex < unlearnedVocabularies.length - 1) {
+        currentIndex++;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xem hết từ chưa học!')),
+        );
+        _loadUnlearnedVocabularies();
+      }
     });
   }
 
@@ -56,6 +73,8 @@ class _LearnPageState extends State<LearnPage> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          centerTitle: true,
+          title: const Text('Học từ mới'),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -66,6 +85,8 @@ class _LearnPageState extends State<LearnPage> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          centerTitle: true,
+          title: const Text('Học từ mới'),
         ),
         body: const Center(child: Text('Không còn từ nào để học!')),
       );
@@ -75,92 +96,166 @@ class _LearnPageState extends State<LearnPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        centerTitle: true,
+        title: const Text('Học từ mới'),
       ),
-      body: Center(
-        child: LearnWordWidget(
-          word: unlearnedVocabularies[currentIndex].word,
-          meaning: unlearnedVocabularies[currentIndex].meanings.join('; '),
-          onKnownPressed: _markAsKnown,
-        ),
+      body: LearnWordWidget(
+        vocabulary: unlearnedVocabularies[currentIndex],
+        onKnownPressed: _markAsKnown,
+        onSkipPressed: _skipWord,
       ),
     );
   }
 }
 
 class LearnWordWidget extends StatelessWidget {
-  final String word;
-  final String meaning;
+  final Vocabulary vocabulary;
   final VoidCallback onKnownPressed;
+  final VoidCallback onSkipPressed;
 
   const LearnWordWidget({
     super.key,
-    required this.word,
-    required this.meaning,
+    required this.vocabulary,
     required this.onKnownPressed,
+    required this.onSkipPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double cardSize = screenWidth * 0.9; // Chiếm 90% chiều rộng màn hình
+    final double cardSize = screenWidth * 0.85;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: cardSize,
-            height: cardSize, // Hình vuông
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      word,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      meaning,
-                      style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-                      textAlign: TextAlign.center,
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                  ],
+          // Ô vuông chứa từ và phát âm
+          Center(
+            child: Container(
+              width: cardSize,
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    vocabulary.word,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (vocabulary.pronunciation_uk != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        '/${vocabulary.pronunciation_uk}/',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey[700],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: onKnownPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(300, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+          const SizedBox(height: 24),
+          // Phần ý nghĩa
+          Text(
+            'Nghĩa:',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            child: const Text(
-              'Already Know',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child:
+                vocabulary.meanings.isEmpty
+                    ? const Center(child: Text('Không có nghĩa nào.'))
+                    : ListView.builder(
+                      itemCount: vocabulary.meanings.length,
+                      itemBuilder: (context, index) {
+                        final meaning = vocabulary.meanings[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  meaning.meaning,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Ví dụ: ${meaning.example}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+          ),
+          // Nút điều khiển
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: onSkipPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[300],
+                    foregroundColor: Colors.black87,
+                    minimumSize: const Size(140, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Chưa thuộc',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: onKnownPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(140, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Đã thuộc',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

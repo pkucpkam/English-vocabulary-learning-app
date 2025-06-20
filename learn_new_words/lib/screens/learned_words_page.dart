@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/vocab.dart';
 import '../services/data_service.dart';
 import 'package:intl/intl.dart';
+import 'vocab_detail_page.dart';
 
 class LearnedWordsPage extends StatefulWidget {
   final DateTime selectedDay;
@@ -84,11 +85,21 @@ class _LearnedWordsPageState extends State<LearnedWordsPage> {
                         ),
                       ),
                       subtitle: Text(
-                        vocab.meanings.join('; '),
+                        vocab.meanings.map((m) => m.meaning).join(', '),
                         style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => VocabDetailPage(vocabulary: vocab),
+                          ),
+                        );
+                      },
                     ),
                   );
                 },
