@@ -22,13 +22,14 @@ class VocabularyAdapter extends TypeAdapter<Vocabulary> {
       isLearned: fields[2] as bool,
       learnedDate: fields[3] as DateTime?,
       pronunciation_uk: fields[4] as String?,
+      audio: fields[5] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Vocabulary obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.word)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class VocabularyAdapter extends TypeAdapter<Vocabulary> {
       ..writeByte(3)
       ..write(obj.learnedDate)
       ..writeByte(4)
-      ..write(obj.pronunciation_uk);
+      ..write(obj.pronunciation_uk)
+      ..writeByte(5)
+      ..write(obj.audio);
   }
 
   @override

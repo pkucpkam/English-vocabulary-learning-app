@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learn_new_words/models/vocab.dart';
 import 'package:intl/intl.dart';
+import 'package:learn_new_words/services/audio_service.dart'; // Thêm import
 
 class VocabDetailPage extends StatelessWidget {
   final Vocabulary vocabulary;
@@ -21,43 +22,69 @@ class VocabDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ô vuông chứa từ và phát âm
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    vocabulary.word,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+            // Ô vuông chứa từ, phát âm và nút loa
+            Stack(
+              children: [
+                // Container chứa từ và phát âm
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  if (vocabulary.pronunciation_uk != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        '/${vocabulary.pronunciation_uk}/',
+                  child: Column(
+                    children: [
+                      Text(
+                        vocabulary.word,
                         style: TextStyle(
-                          fontSize: 20,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey[700],
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      if (vocabulary.pronunciation_uk != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            '/${vocabulary.pronunciation_uk}/',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey[700],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Nút loa ở góc trên bên phải
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.volume_up,
+                      size: 24,
+                      color: Colors.blue,
                     ),
-                ],
-              ),
+                    onPressed: () {
+                      AudioService.playAudio(vocabulary); // Phát âm thanh
+                    },
+                    splashRadius: 20,
+                    tooltip: 'Phát âm thanh',
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             // Phần ý nghĩa

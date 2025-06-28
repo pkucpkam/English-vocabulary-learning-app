@@ -19,12 +19,16 @@ class Vocabulary extends HiveObject {
   @HiveField(4)
   String? pronunciation_uk;
 
+  @HiveField(5)
+  String? audio;
+
   Vocabulary({
     required this.word,
     required this.meanings,
     this.isLearned = false,
     this.learnedDate,
     this.pronunciation_uk,
+    this.audio,
   });
 
   factory Vocabulary.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,7 @@ class Vocabulary extends HiveObject {
               ? DateTime.tryParse(json['learnedDate'] as String)
               : null, // Mặc định null nếu không có
       pronunciation_uk: json['pronunciation_uk'] as String?,
+      audio: json['audio'] as String?,
     );
   }
 
@@ -51,6 +56,7 @@ class Vocabulary extends HiveObject {
       'isLearned': isLearned,
       'learnedDate': learnedDate?.toIso8601String(),
       'pronunciation_uk': pronunciation_uk,
+      'audio': audio,
     };
   }
 }

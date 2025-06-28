@@ -82,19 +82,7 @@ class _VietnameseToEnglishWidgetState extends State<VietnameseToEnglishWidget> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              if (widget.vocabulary.pronunciation_uk != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    '/${widget.vocabulary.pronunciation_uk}/',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey[700],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+            
             ],
           ),
         ),

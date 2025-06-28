@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../models/vocab.dart';
+import '../services/audio_service.dart';
 
 class EnglishToVietnameseWidget extends StatefulWidget {
   final Vocabulary vocabulary;
@@ -67,42 +68,60 @@ class _EnglishToVietnameseWidgetState extends State<EnglishToVietnameseWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: cardSize,
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-            ),
-          ),
-          child: Column(
-            children: [
-              Text(
-                widget.vocabulary.word,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+        Stack(
+          children: [
+            // Container chứa từ
+            Container(
+              width: cardSize,
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 ),
-                textAlign: TextAlign.center,
               ),
-              if (widget.vocabulary.pronunciation_uk != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    '/${widget.vocabulary.pronunciation_uk}/',
+              child: Column(
+                children: [
+                  Text(
+                    widget.vocabulary.word,
                     style: TextStyle(
-                      fontSize: 20,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey[700],
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-            ],
-          ),
+                  if (widget.vocabulary.pronunciation_uk != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        '/${widget.vocabulary.pronunciation_uk}/',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey[700],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Nút loa ở góc trên bên phải
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.volume_up, size: 24, color: Colors.blue),
+                onPressed: () {
+                  AudioService.playAudio(widget.vocabulary);
+                },
+                splashRadius: 20,
+                tooltip: 'Phát âm thanh',
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 24),
         ...options.map(
