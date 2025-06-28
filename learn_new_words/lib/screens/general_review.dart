@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:intl/intl.dart';
 import '../models/vocab.dart';
 import '../services/data_service.dart';
 import '../widgets/english_to_vietnamese_widget.dart';
@@ -8,17 +7,15 @@ import '../widgets/matching_widget.dart';
 import '../widgets/vietnamese_to_english_input_widget.dart';
 import '../widgets/vietnamese_to_english_widget.dart';
 
-class ReviewPage extends StatefulWidget {
-  final DateTime selectedDay;
-
-  const ReviewPage({super.key, required this.selectedDay});
+class GeneralReviewPage extends StatefulWidget {
+  const GeneralReviewPage({super.key});
 
   @override
-  State<ReviewPage> createState() => _ReviewPageState();
+  State<GeneralReviewPage> createState() => _GeneralReviewPageState();
 }
 
-class _ReviewPageState extends State<ReviewPage> {
-  List<Vocabulary> dayVocabularies = [];
+class _GeneralReviewPageState extends State<GeneralReviewPage> {
+  List<Vocabulary> learnedVocabularies = [];
   int currentIndex = 0;
   int reviewType = 0;
   int correctAnswers = 0;
@@ -28,28 +25,18 @@ class _ReviewPageState extends State<ReviewPage> {
   @override
   void initState() {
     super.initState();
-    _loadDayVocabularies();
+    _loadLearnedVocabularies();
   }
 
-  Future<void> _loadDayVocabularies() async {
+  Future<void> _loadLearnedVocabularies() async {
     setState(() {
       isLoading = true;
     });
     final vocabList = await DataService.getLearnedVocabularies();
-    final dayVocabs =
-        vocabList
-            .where(
-              (vocab) =>
-                  vocab.learnedDate != null &&
-                  vocab.learnedDate!.year == widget.selectedDay.year &&
-                  vocab.learnedDate!.month == widget.selectedDay.month &&
-                  vocab.learnedDate!.day == widget.selectedDay.day,
-            )
-            .toList();
     setState(() {
-      dayVocabularies = dayVocabs;
+      learnedVocabularies = vocabList;
       isLoading = false;
-      if (dayVocabularies.isNotEmpty) _randomizeReviewType();
+      if (learnedVocabularies.isNotEmpty) _randomizeReviewType();
     });
   }
 
@@ -62,7 +49,7 @@ class _ReviewPageState extends State<ReviewPage> {
   void _nextQuestion({bool isCorrect = false}) {
     setState(() {
       if (isCorrect) correctAnswers++;
-      if (currentIndex < dayVocabularies.length - 1) {
+      if (currentIndex < learnedVocabularies.length - 1) {
         currentIndex++;
         _randomizeReviewType();
       } else {
@@ -78,32 +65,51 @@ class _ReviewPageState extends State<ReviewPage> {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Ôn tập ngày ${DateFormat('dd/MM/yyyy').format(widget.selectedDay)}',
-          ),
+          title: const Text('Ôn tập từ vựng'),
+          centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          centerTitle: true,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (dayVocabularies.isEmpty) {
+    if (learnedVocabularies.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Ôn tập ngày ${DateFormat('dd/MM/yyyy').format(widget.selectedDay)}',
-          ),
+          title: const Text('Ôn tập từ vựng'),
+          centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          centerTitle: true,
         ),
-        body: const Center(child: Text('Không có từ vựng nào để ôn tập!')),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Center(
+              child: Text(
+                'Chưa có từ vựng để ôn tập!',
+                style: TextStyle(fontSize: 24),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Center(
+              child: Text(
+                'Hãy học từ mới để bắt đầu!',
+                style: TextStyle(fontSize: 24),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Icon(
+              Icons.psychology_alt_rounded,
+              size: 128,
+              color: Colors.grey,
+            ),
+          ],
+        ),
       );
     }
 
-    final currentVocab = dayVocabularies[currentIndex];
+    final currentVocab = learnedVocabularies[currentIndex];
     final selectedMeaning =
         currentVocab.meanings.isNotEmpty
             ? currentVocab.meanings[random.nextInt(
@@ -117,7 +123,7 @@ class _ReviewPageState extends State<ReviewPage> {
         reviewWidget = EnglishToVietnameseWidget(
           vocabulary: currentVocab,
           correctMeaning: selectedMeaning,
-          vocabularies: dayVocabularies,
+          vocabularies: learnedVocabularies,
           onNext: _nextQuestion,
         );
         break;
@@ -125,7 +131,7 @@ class _ReviewPageState extends State<ReviewPage> {
         reviewWidget = VietnameseToEnglishWidget(
           vocabulary: currentVocab,
           correctMeaning: selectedMeaning,
-          vocabularies: dayVocabularies,
+          vocabularies: learnedVocabularies,
           onNext: _nextQuestion,
         );
         break;
@@ -138,7 +144,7 @@ class _ReviewPageState extends State<ReviewPage> {
         break;
       case 3:
         reviewWidget = MatchingWidget(
-          vocabularies: dayVocabularies,
+          vocabularies: learnedVocabularies,
           onComplete: _nextQuestion,
         );
         break;
@@ -148,10 +154,10 @@ class _ReviewPageState extends State<ReviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ôn tập từ vựng'),
+        title: const Text('Ôn tập tổng quát'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(

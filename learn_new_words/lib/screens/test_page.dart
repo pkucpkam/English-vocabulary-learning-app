@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:intl/intl.dart';
 import '../models/vocab.dart';
 import '../services/data_service.dart';
 import '../widgets/english_to_vietnamese_widget.dart';
 import '../widgets/matching_widget.dart';
 import '../widgets/vietnamese_to_english_input_widget.dart';
 import '../widgets/vietnamese_to_english_widget.dart';
+import 'summary_page.dart';
 
-class ReviewPage extends StatefulWidget {
+class TestPage extends StatefulWidget {
   final DateTime selectedDay;
 
-  const ReviewPage({super.key, required this.selectedDay});
+  const TestPage({super.key, required this.selectedDay});
 
   @override
-  State<ReviewPage> createState() => _ReviewPageState();
+  State<TestPage> createState() => _TestPageState();
 }
 
-class _ReviewPageState extends State<ReviewPage> {
+class _TestPageState extends State<TestPage> {
   List<Vocabulary> dayVocabularies = [];
+  List<Vocabulary> incorrectWords = [];
   int currentIndex = 0;
   int reviewType = 0;
-  int correctAnswers = 0;
   bool isLoading = true;
   final Random random = Random();
 
@@ -32,9 +32,7 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> _loadDayVocabularies() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
     final vocabList = await DataService.getLearnedVocabularies();
     final dayVocabs =
         vocabList
@@ -46,6 +44,7 @@ class _ReviewPageState extends State<ReviewPage> {
                   vocab.learnedDate!.day == widget.selectedDay.day,
             )
             .toList();
+
     setState(() {
       dayVocabularies = dayVocabs;
       isLoading = false;
@@ -54,52 +53,43 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   void _randomizeReviewType() {
-    setState(() {
-      reviewType = random.nextInt(4);
-    });
+    setState(() => reviewType = random.nextInt(4));
   }
 
   void _nextQuestion({bool isCorrect = false}) {
-    setState(() {
-      if (isCorrect) correctAnswers++;
-      if (currentIndex < dayVocabularies.length - 1) {
+    final currentVocab = dayVocabularies[currentIndex];
+    if (!isCorrect && !incorrectWords.contains(currentVocab)) {
+      incorrectWords.add(currentVocab);
+    }
+
+    if (currentIndex < dayVocabularies.length - 1) {
+      setState(() {
         currentIndex++;
         _randomizeReviewType();
-      } else {
-        currentIndex = 0;
-        correctAnswers = 0;
-        _randomizeReviewType();
-      }
-    });
+      });
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => SummaryPage(
+                incorrectWords: incorrectWords,
+                total: dayVocabularies.length,
+              ),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Ôn tập ngày ${DateFormat('dd/MM/yyyy').format(widget.selectedDay)}',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          centerTitle: true,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (dayVocabularies.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Ôn tập ngày ${DateFormat('dd/MM/yyyy').format(widget.selectedDay)}',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          centerTitle: true,
-        ),
-        body: const Center(child: Text('Không có từ vựng nào để ôn tập!')),
+      return const Scaffold(
+        body: Center(child: Text('Không có từ vựng nào để kiểm tra!')),
       );
     }
 
@@ -148,17 +138,26 @@ class _ReviewPageState extends State<ReviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ôn tập từ vựng'),
+        title: Text('Kiểm tra từ vựng'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                '${currentIndex + 1}/${dayVocabularies.length}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: reviewWidget,
-        ),
-      ),
+      body: Padding(padding: const EdgeInsets.all(16.0), child: reviewWidget),
     );
   }
 }

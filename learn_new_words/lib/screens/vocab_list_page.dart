@@ -93,9 +93,7 @@ class _VocabListPageState extends State<VocabListPage> {
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surfaceContainer,
               ),
-              onChanged: (value) {
-                // Được xử lý bởi _onSearchChanged qua addListener
-              },
+              onChanged: (value) {},
             ),
           ),
           Expanded(

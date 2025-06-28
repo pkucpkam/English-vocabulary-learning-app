@@ -35,7 +35,7 @@ class DataService {
   }) async {
     vocab.isLearned = isLearned;
     vocab.learnedDate = isLearned ? (learnedDate ?? DateTime.now()) : null;
-    await vocab.save(); // Lưu thay đổi vào Hive
+    await vocab.save();
   }
 
   /// Lấy danh sách từ đã học

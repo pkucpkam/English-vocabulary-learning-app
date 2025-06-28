@@ -39,11 +39,11 @@ class Vocabulary extends HiveObject {
               .map((item) => Meaning.fromJson(item as Map<String, dynamic>))
               .toList(),
       isLearned:
-          json['isLearned'] as bool? ?? false, // Mặc định false nếu không có
+          json['isLearned'] as bool? ?? false, 
       learnedDate:
           json['learnedDate'] != null
               ? DateTime.tryParse(json['learnedDate'] as String)
-              : null, // Mặc định null nếu không có
+              : null, 
       pronunciation_uk: json['pronunciation_uk'] as String?,
       audio: json['audio'] as String?,
     );

@@ -12,12 +12,15 @@ void main() async {
     // Đăng ký cả VocabularyAdapter và MeaningAdapter
     Hive.registerAdapter(VocabularyAdapter());
     Hive.registerAdapter(MeaningAdapter());
-    // Xóa hộp Hive cũ để tránh lỗi dữ liệu không tương thích
-    await Hive.deleteBoxFromDisk('vocabularyBox');
-    await DataService.initVocabularyFromJsonIfNeeded();
+
+    // Khởi tạo khi chưa có dữ liệu
+    var box = await Hive.openBox<Vocabulary>('vocabularyBox');
+    if (box.isEmpty) {
+      await DataService.initVocabularyFromJsonIfNeeded();
+    }
+
     runApp(const MyApp());
   } catch (e, stackTrace) {
-    // Hiển thị lỗi nếu khởi tạo thất bại
     runApp(
       MaterialApp(
         home: Scaffold(
@@ -55,11 +58,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const MyHomeContent(),
-    const VocabListPage(),
-    const Center(child: Text("Settings Page", style: TextStyle(fontSize: 24))),
-  ];
+  final List<Widget> _pages = [const MyHomeContent(), const VocabListPage()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -73,12 +72,8 @@ class _MainPageState extends State<MainPage> {
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Vocabulary'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Từ điển'),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

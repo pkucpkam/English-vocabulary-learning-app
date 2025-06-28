@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:learn_new_words/screens/learned_words_page.dart';
-import 'package:learn_new_words/screens/review.dart';
+import 'package:learn_new_words/screens/test_page.dart';
 import '../services/data_service.dart';
 import 'package:intl/intl.dart';
 
-class DailyVocabularyProgressPage extends StatefulWidget {
-  const DailyVocabularyProgressPage({super.key});
+class ListTestPage extends StatefulWidget {
+  const ListTestPage({super.key});
 
   @override
-  State<DailyVocabularyProgressPage> createState() =>
-      _DailyVocabularyProgressPageState();
+  State<ListTestPage> createState() => _ListTestPageState();
 }
 
-class _DailyVocabularyProgressPageState
-    extends State<DailyVocabularyProgressPage> {
+class _ListTestPageState extends State<ListTestPage> {
   List<DateTime> learnedDays = [];
   bool isLoading = true;
 
@@ -56,10 +54,10 @@ class _DailyVocabularyProgressPageState
     );
   }
 
-  void _goToReview(BuildContext context, DateTime day) {
+  void _goToTest(BuildContext context, DateTime day) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReviewPage(selectedDay: day)),
+      MaterialPageRoute(builder: (context) => TestPage(selectedDay: day)),
     );
   }
 
@@ -141,8 +139,8 @@ class _DailyVocabularyProgressPageState
                     tooltip: 'Show details',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.orange),
-                    onPressed: () => _goToReview(context, day),
+                    icon: const Icon(Icons.edit_square, color: Colors.orange),
+                    onPressed: () => _goToTest(context, day),
                     tooltip: 'Review words',
                   ),
                 ],

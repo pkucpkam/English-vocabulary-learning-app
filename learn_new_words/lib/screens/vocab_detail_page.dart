@@ -22,10 +22,8 @@ class VocabDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ô vuông chứa từ, phát âm và nút loa
             Stack(
               children: [
-                // Container chứa từ và phát âm
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20.0),

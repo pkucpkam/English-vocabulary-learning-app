@@ -1,9 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:learn_new_words/screens/general_review.dart';
 import 'package:learn_new_words/screens/learn.dart';
+import 'package:learn_new_words/screens/list_test_page.dart';
 import 'package:learn_new_words/screens/study_progress_page.dart';
+import 'package:learn_new_words/services/data_service.dart';
 
-class MyHomeContent extends StatelessWidget {
+class MyHomeContent extends StatefulWidget {
   const MyHomeContent({super.key});
+
+  @override
+  State<MyHomeContent> createState() => _MyHomeContentState();
+}
+
+class _MyHomeContentState extends State<MyHomeContent> {
+  int totalWords = 0;
+  int todayWords = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWordStats();
+  }
+
+  Future<void> _loadWordStats() async {
+    final allVocabs = await DataService.getLearnedVocabularies();
+    final today = DateTime.now();
+
+    final todayVocabs =
+        allVocabs.where((vocab) {
+          final learned = vocab.learnedDate;
+          return learned != null &&
+              learned.year == today.year &&
+              learned.month == today.month &&
+              learned.day == today.day;
+        }).toList();
+
+    setState(() {
+      totalWords = allVocabs.length;
+      todayWords = todayVocabs.length;
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,20 +52,25 @@ class MyHomeContent extends StatelessWidget {
         children: [
           const SizedBox(height: 24),
           const Text(
-            'Progress Overview',
+            'Tổng quan quá trình học',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatCard(context, 'Total Learned', '1250', Icons.book),
-              _buildStatCard(context, 'Today', '15', Icons.today),
+              _buildStatCard(
+                context,
+                'Số từ đã học',
+                '$totalWords',
+                Icons.book,
+              ),
+              _buildStatCard(context, 'Hôm nay', '$todayWords', Icons.today),
             ],
           ),
           const SizedBox(height: 24),
           const Text(
-            'Learn & Review',
+            'Học và Luyện tập',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -35,25 +78,27 @@ class MyHomeContent extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 24,
             mainAxisSpacing: 24,
-            padding: const EdgeInsets.fromLTRB(48, 2, 48, 2),
+            padding: const EdgeInsets.fromLTRB(24, 2, 24, 2),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
               _buildActionButton(
                 context,
-                'Learn New Words',
+                'Học từ mới',
                 Icons.add_circle_outline,
                 Colors.blue,
                 () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => LearnPage()),
-                  );
+                  ).then((_) {
+                    _loadWordStats();
+                  });
                 },
               ),
               _buildActionButton(
                 context,
-                'Daily Review',
+                'Ôn tập theo ngày',
                 Icons.refresh,
                 Colors.green,
                 () {
@@ -67,19 +112,29 @@ class MyHomeContent extends StatelessWidget {
               ),
               _buildActionButton(
                 context,
-                'General Review',
-                Icons.library_books,
+                'Kiểm tra từ vựng',
+                Icons.quiz,
                 Colors.orange,
                 () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (_) => GeneralReviewPage()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ListTestPage()),
+                  );
                 },
               ),
               _buildActionButton(
                 context,
-                'Unmastered Words',
-                Icons.warning_amber,
-                Colors.red,
-                () {},
+                'Ôn tập tổng quát',
+                Icons.library_books,
+                const Color.fromARGB(255, 235, 109, 157),
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const GeneralReviewPage(),
+                    ),
+                  );
+                },
               ),
             ],
           ),

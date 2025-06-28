@@ -131,11 +131,9 @@ class LearnWordWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Ô vuông chứa từ, phát âm và nút loa
           Center(
             child: Stack(
               children: [
-                // Container chứa từ và phát âm
                 Container(
                   width: cardSize,
                   padding: const EdgeInsets.all(20.0),
@@ -188,7 +186,7 @@ class LearnWordWidget extends StatelessWidget {
                       color: Colors.blue,
                     ),
                     onPressed: () {
-                      AudioService.playAudio(vocabulary); // Phát âm thanh
+                      AudioService.playAudio(vocabulary); 
                     },
                     splashRadius: 20,
                     tooltip: 'Phát âm thanh',
@@ -246,7 +244,6 @@ class LearnWordWidget extends StatelessWidget {
                       },
                     ),
           ),
-          // Nút điều khiển
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Row(

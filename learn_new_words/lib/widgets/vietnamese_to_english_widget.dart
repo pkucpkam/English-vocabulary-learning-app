@@ -35,13 +35,19 @@ class _VietnameseToEnglishWidgetState extends State<VietnameseToEnglishWidget> {
   void _generateOptions() {
     final random = Random();
     options = [widget.vocabulary.word];
-    while (options.length < 4 && widget.vocabularies.length > 1) {
+    final availableVocabs =
+        widget.vocabularies.where((v) => v != widget.vocabulary).toList();
+    while (options.length < 4 && availableVocabs.isNotEmpty) {
       final randomVocab =
-          widget.vocabularies[random.nextInt(widget.vocabularies.length)];
-      if (randomVocab.word != widget.vocabulary.word &&
-          !options.contains(randomVocab.word)) {
+          availableVocabs[random.nextInt(availableVocabs.length)];
+      if (!options.contains(randomVocab.word)) {
         options.add(randomVocab.word);
+        availableVocabs.remove(randomVocab);
       }
+    }
+    // Nếu không đủ 4 options, thêm option giả
+    while (options.length < 4) {
+      options.add('Word ${options.length + 1}');
     }
     options.shuffle();
   }
@@ -50,6 +56,14 @@ class _VietnameseToEnglishWidgetState extends State<VietnameseToEnglishWidget> {
     setState(() {
       selectedOption = selected;
       isCorrect = selected == widget.vocabulary.word;
+    });
+  }
+
+  void _resetState() {
+    setState(() {
+      selectedOption = null;
+      isCorrect = null;
+      _generateOptions();
     });
   }
 
@@ -71,19 +85,14 @@ class _VietnameseToEnglishWidgetState extends State<VietnameseToEnglishWidget> {
               color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
             ),
           ),
-          child: Column(
-            children: [
-              Text(
-                widget.correctMeaning.meaning,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            
-            ],
+          child: Text(
+            widget.correctMeaning.meaning,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
         const SizedBox(height: 24),
@@ -94,9 +103,18 @@ class _VietnameseToEnglishWidgetState extends State<VietnameseToEnglishWidget> {
               onPressed: () => _checkAnswer(option),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    selectedOption == option
-                        ? (isCorrect == true ? Colors.green : Colors.red)
-                        : Theme.of(context).colorScheme.primary,
+                    selectedOption != null
+                        ? (option == widget.vocabulary.word
+                            ? Colors
+                                .green // Đáp án đúng: xanh
+                            : (selectedOption == option && isCorrect == false
+                                ? Colors.red
+                                : Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.5)))
+                        : Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.4),
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
@@ -107,18 +125,23 @@ class _VietnameseToEnglishWidgetState extends State<VietnameseToEnglishWidget> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
         if (selectedOption != null)
           Padding(
             padding: const EdgeInsets.only(top: 16.0),
             child: ElevatedButton(
-              onPressed: () => widget.onNext(isCorrect: isCorrect ?? false),
+              onPressed: () {
+                widget.onNext(isCorrect: isCorrect ?? false);
+                _resetState();
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 4,
               ),
               child: const Text('Tiếp theo', style: TextStyle(fontSize: 16)),
             ),
