@@ -10,13 +10,15 @@ A Flutter application designed to help users learn English vocabulary using the 
 - Shows word meanings and example sentences from the `vocabulary.json` file.
 - Includes interactive learning tools:
   - Flashcards for quick review.
+  - Listen to pronunciation of vocabulary words
   - Quizzes to test vocabulary knowledge.
   - Progress tracking to monitor learning achievements.
 - Optimized for both Android and iOS platforms.
 
 ## Project Structure
 - `/lib`: Contains Dart files for the app’s UI and logic.
-- `/assets`: Stores the `vocabulary.json` file with vocabulary data.
+- `/data`: Stores the `vocabulary.json` file with vocabulary data.
+- `/assets/audio`: Stores audio files of words being pronounced
 - `pubspec.yaml`: Configuration file for Flutter dependencies and assets.
 
 ## Getting Started
@@ -46,11 +48,11 @@ A Flutter application designed to help users learn English vocabulary using the 
      ```
 
 4. **Add the JSON File**:
-   - Place the pre-generated `vocabulary.json` file in the `/assets` directory.
+   - Place the pre-generated `vocabulary.json` file in the `/data` directory.
    - Update `pubspec.yaml` to include the asset:
      ```yaml
      assets:
-       - assets/vocabulary.json
+       - data/vocabulary.json
      ```
 
 5. **Run the App**:
@@ -59,15 +61,3 @@ A Flutter application designed to help users learn English vocabulary using the 
      flutter run
      ```
 
-### Notes
-- Ensure the `vocabulary.json` file is correctly placed in `/assets` before running the app.
-- The app expects the JSON file to follow this structure:
-  ```json
-  [
-    {
-      "word": "example",
-      "meanings": ["a thing characteristic of its kind", "a pattern or model"],
-    },
-    ...
-  ]
-  ```

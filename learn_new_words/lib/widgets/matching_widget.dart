@@ -24,6 +24,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
   Set<String> incorrectWords = {};
   Set<String> incorrectMeanings = {};
   bool gameCompleted = false;
+  bool isChecking = false;
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
             .toList();
 
     allPairs.shuffle();
-    pairs = allPairs.take(4).toList(); 
+    pairs = allPairs.take(4).toList();
 
     matchedPairs.clear();
     incorrectWords.clear();
@@ -73,7 +74,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
   }
 
   void _checkMatch() {
-    if (selectedWord != null && selectedMeaning != null) {
+    if (selectedWord != null && selectedMeaning != null && !isChecking) {
       final isCorrect = pairs.any(
         (pair) =>
             pair['word'] == selectedWord && pair['meaning'] == selectedMeaning,
@@ -90,7 +91,6 @@ class _MatchingWidgetState extends State<MatchingWidget> {
         });
 
         if (matchedPairs.length == pairs.length) {
-          // Đã hoàn thành hết
           Future.delayed(const Duration(milliseconds: 300), () {
             setState(() {
               gameCompleted = true;
@@ -99,6 +99,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
         }
       } else {
         setState(() {
+          isChecking = true; // 👉 Chặn click khi đang xử lý sai
           incorrectWords.add(selectedWord!);
           incorrectMeanings.add(selectedMeaning!);
         });
@@ -109,6 +110,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
             incorrectMeanings.remove(selectedMeaning!);
             selectedWord = null;
             selectedMeaning = null;
+            isChecking = false; // 👉 Mở lại tương tác
           });
         });
       }
@@ -116,8 +118,6 @@ class _MatchingWidgetState extends State<MatchingWidget> {
   }
 
   Color _getCardColor(String text, bool isWord) {
-    
-
     if ((isWord && incorrectWords.contains(text)) ||
         (!isWord && incorrectMeanings.contains(text))) {
       return Colors.red[200]!;
@@ -164,7 +164,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
               ) {
                 return GestureDetector(
                   onTap:
-                      _isDisabled(word, true) ? null : () => _selectWord(word),
+                      (_isDisabled(word, true) || isChecking) ? null : () => _selectWord(word),
                   child: Card(
                     color: _getCardColor(word, true),
                     elevation: 4,
@@ -189,15 +189,12 @@ class _MatchingWidgetState extends State<MatchingWidget> {
                 );
               }),
 
-              // Render riêng các nghĩa
               ...pairs.map((pair) => pair['meaning'] as String).toSet().map((
                 meaning,
               ) {
                 return GestureDetector(
                   onTap:
-                      _isDisabled(meaning, false)
-                          ? null
-                          : () => _selectMeaning(meaning),
+                      (_isDisabled(meaning, false) || isChecking) ? null : () => _selectMeaning(meaning),
                   child: Card(
                     color: _getCardColor(meaning, false),
                     elevation: 4,
@@ -233,7 +230,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
               child: ElevatedButton(
                 onPressed: () {
                   widget.onComplete(isCorrect: true);
-                  _resetGame(); 
+                  _resetGame();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,

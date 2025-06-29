@@ -8,7 +8,7 @@ This project consists of two main components:
 ## Project Structure
 - `/app`: Flutter application source code.
   - `/lib`: Dart files for UI and logic.
-  - `/assets`: Stores the JSON file with vocabulary data.
+  - `/data`: Stores the JSON file with vocabulary data.
 - `/scripts`: Python script for data scraping.
   - `scraper.py`: Script to fetch meanings and generate the JSON file.
 - `vocabulary.json`: Output file containing words and their meanings.
@@ -28,17 +28,29 @@ The data crawling component uses a Python script to extract meanings, examples, 
   ```json
   [
     {
-      "word": "example",
-      "meanings": ["a thing characteristic of its kind", "a pattern or model"],
-    },
+    "word": "abandon",
+    "meanings": [
+      {
+        "meaning": "từ bỏ",
+        "example": "The bank robbers abandoned the stolen car ."
+      },
+      {
+        "meaning": "hủy",
+        "example": "The match had to be abandoned because of the bad weather ."
+      },
+      {
+        "meaning": "buông thả",
+        "example": "After his wife’s death , he abandoned himself to despair ."
+      }
+    ],
+    "pronunciation_uk": "əˈbӕndən",
+    "audio": "abandon.mp3"
+  },
     ...
   ]
   ```
 - **Error Handling**: Includes checks for network issues, missing data, or changes in the website’s HTML structure to ensure robust scraping.
 
-### Notes
-- Ensure compliance with the Cambridge Dictionary's terms of use when scraping.
-- The script may need updates if the dictionary's HTML structure changes.
 
 ## Part 2: Flutter Application
 
@@ -67,15 +79,7 @@ The Flutter app provides an interactive interface for learning English vocabular
      flutter pub get
      ```
 
-3. **Add the JSON File**:
-   - Copy the `vocabulary.json` file to `/app/assets`.
-   - Update `pubspec.yaml` to include the asset:
-     ```yaml
-     assets:
-       - assets/vocabulary.json
-     ```
-
-4. **Run the App**:
+3. **Run the App**:
    - Launch the app on an emulator or device:
      ```bash
      flutter run
@@ -83,8 +87,11 @@ The Flutter app provides an interactive interface for learning English vocabular
 
 ### Features
 - Displays vocabulary from the Oxford 3000 list.
-- Includes learning tools like quizzes and flashcards.
-- Tracks user progress.
+- Includes interactive learning tools:
+  - Flashcards for quick review.
+  - Listen to pronunciation of vocabulary words
+  - Quizzes to test vocabulary knowledge.
+  - Progress tracking to monitor learning achievements.
 
 ## Data Source
 - **Vocabulary**: Oxford 3000 word list.
