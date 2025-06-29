@@ -99,7 +99,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
         }
       } else {
         setState(() {
-          isChecking = true; // 👉 Chặn click khi đang xử lý sai
+          isChecking = true; 
           incorrectWords.add(selectedWord!);
           incorrectMeanings.add(selectedMeaning!);
         });
@@ -110,7 +110,7 @@ class _MatchingWidgetState extends State<MatchingWidget> {
             incorrectMeanings.remove(selectedMeaning!);
             selectedWord = null;
             selectedMeaning = null;
-            isChecking = false; // 👉 Mở lại tương tác
+            isChecking = false; 
           });
         });
       }
@@ -158,7 +158,6 @@ class _MatchingWidgetState extends State<MatchingWidget> {
             runSpacing: 12,
             alignment: WrapAlignment.center,
             children: [
-              // Render riêng các từ
               ...pairs.map((pair) => pair['word'] as String).toSet().map((
                 word,
               ) {
@@ -223,7 +222,6 @@ class _MatchingWidgetState extends State<MatchingWidget> {
 
           const SizedBox(height: 24),
 
-          // Nút tiếp theo khi hoàn thành
           if (gameCompleted)
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
